@@ -1,25 +1,56 @@
 # Dependencies
 node_modules/
+jspm_packages/
+web_modules/
 
-# Next.js build output
+# Build, test, and framework output
 /.next/
 /out/
 /build/
-
-# Local environment and secrets
-.env*
-!.env.example
-
-# TypeScript build info
-*.tsbuildinfo
-
-# Deployment
+/dist/
+/.nuxt/
+/.output/
+/coverage/
+*.lcov
+.nyc_output/
+.cache/
+.parcel-cache/
 .vercel/
 
-# Logs
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# TypeScript and tool caches
+*.tsbuildinfo
+.npm/
+.eslintcache
+.stylelintcache
+
+# Package manager files
+*.tgz
+.yarn-integrity
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Logs and runtime data
 logs/
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+pids/
+*.pid
+*.pid.lock
+*.seed
 
 # Operating system files
 .DS_Store
