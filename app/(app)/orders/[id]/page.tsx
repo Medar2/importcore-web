@@ -1,9 +1,9 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
-import { Loader2, Lock, Send } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Loader2, Lock, Navigation, Send, Ship } from 'lucide-react'
 import { ordersService } from '@/features/orders/services/orders.service'
-import type { Order, OrderBalance } from '@/features/orders/services/orders.service'
+import type { Order, OrderBalance, OrderTrackingResult } from '@/features/orders/services/orders.service'
 import { OrderStatusPanel } from '@/features/orders/components/order-status-panel'
 import { statusLabel } from '@/features/orders/utils/order-status'
 import { OrderInvoicePanel } from '@/features/fiscal/components/order-invoice-panel'
@@ -16,6 +16,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params)
   const [order, setOrder] = useState<Order | null>(null)
   const [balance, setBalance] = useState<OrderBalance | null>(null)
+  const [tracking, setTracking] = useState<OrderTrackingResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -28,10 +29,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [dispatching, setDispatching] = useState(false)
 
   function load() {
-    Promise.all([apiGet<Order>(`/orders/${id}`), ordersService.balance(id)])
-      .then(([o, b]) => {
+    Promise.all([
+      apiGet<Order>(`/orders/${id}`),
+      ordersService.balance(id),
+      ordersService.tracking(id).catch(() => null),
+    ])
+      .then(([o, b, t]) => {
         setOrder(o)
         setBalance(b)
+        setTracking(t)
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
@@ -120,6 +126,73 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           }}
           onError={setError}
         />
+
+        {/* Panel de Tracking Marítimo y Liberación Aduanal */}
+        <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+              <Ship className="size-4 text-primary" /> Tracking Marítimo & Liberación
+            </h2>
+            {tracking?.container && (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                {tracking.container.containerNumber} ({tracking.container.containerType})
+              </span>
+            )}
+          </div>
+
+          {/* Mensaje de Liberación / Aviso Financiero */}
+          {tracking?.liberationMessage && (
+            <div
+              className={`flex items-start gap-2.5 rounded-lg p-3 text-xs ${
+                order.status === 'ARRIVED' && balance?.dispatchLocked
+                  ? 'border border-destructive/40 bg-destructive/10 text-destructive'
+                  : order.status === 'ARRIVED' && !balance?.dispatchLocked
+                    ? 'border border-success/40 bg-success/10 text-success'
+                    : 'border border-primary/30 bg-primary/5 text-foreground'
+              }`}
+            >
+              {order.status === 'ARRIVED' && balance?.dispatchLocked ? (
+                <AlertCircle className="size-4 shrink-0 text-destructive" />
+              ) : order.status === 'ARRIVED' ? (
+                <CheckCircle2 className="size-4 shrink-0 text-success" />
+              ) : (
+                <Navigation className="size-4 shrink-0 text-primary" />
+              )}
+              <div className="flex-1 leading-relaxed">
+                <p className="font-semibold">
+                  {order.status === 'ARRIVED' && balance?.dispatchLocked
+                    ? 'Acción requerida para liberación'
+                    : order.status === 'ARRIVED'
+                      ? 'Liberación autorizada'
+                      : 'Estado del envío'}
+                </p>
+                <p className="mt-0.5">{tracking.liberationMessage}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Fechas Logísticas del Contenedor */}
+          {tracking?.container ? (
+            <div className="grid grid-cols-3 gap-2 rounded-lg bg-muted/30 p-2.5 text-center text-xs">
+              <div>
+                <span className="block text-[10px] uppercase text-muted-foreground">Zarpe (ETD)</span>
+                <span className="font-semibold">{tracking.container.etd ?? '—'}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] uppercase text-muted-foreground">Arribo Estimado (ETA)</span>
+                <span className="font-semibold text-primary">{tracking.container.eta ?? '—'}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] uppercase text-muted-foreground">Arribo Real (ATA)</span>
+                <span className="font-semibold">{tracking.container.ata ?? '—'}</span>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground italic">
+              Pendiente de asignación a contenedor marítimo en origen (China).
+            </p>
+          )}
+        </section>
 
         <OrderInvoicePanel orderId={id} orderStatus={order.status} onError={setError} />
 

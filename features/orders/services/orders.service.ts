@@ -19,12 +19,36 @@ export interface OrderBalance {
   dispatchLocked: boolean
 }
 
+export interface OrderTrackingResult {
+  orderId: string
+  orderNumber: string
+  status: string
+  customerName: string
+  financial: {
+    totalUsd: string
+    paidUsd: string
+    balanceUsd: string
+    dispatchLocked: boolean
+  }
+  liberationMessage: string
+  container: {
+    id: string
+    containerNumber: string
+    containerType: string
+    status: string
+    etd: string | null
+    eta: string | null
+    ata: string | null
+  } | null
+}
+
 export const ordersService = {
   create: (body: { quoteId: string; customerId?: string; containerId?: string; notes?: string }) =>
     apiPost<Order>('/orders', body),
   list: (status?: string) =>
     apiGet<Order[]>(`/orders${status ? `?status=${status}` : ''}`),
   balance: (id: string) => apiGet<OrderBalance>(`/orders/${id}/balance`),
+  tracking: (id: string) => apiGet<OrderTrackingResult>(`/orders/${id}/tracking`),
   pay: (id: string, body: Record<string, unknown>) =>
     apiPost(`/orders/${id}/payments`, body),
   dispatch: (id: string, overrideReason?: string) =>
