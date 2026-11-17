@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { PackageSearch, Loader2 } from 'lucide-react'
 import { login, setToken } from '@/lib/api'
 
@@ -51,8 +52,16 @@ export default function LoginPage() {
               placeholder="admin@importcore.local"
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Contraseña</span>
+          <div className="flex flex-col gap-1 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Contraseña</span>
+              <Link
+                href="/forgot-password"
+                className="text-xs text-primary font-medium hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
             <input
               type="password"
               required
@@ -62,7 +71,7 @@ export default function LoginPage() {
               className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="••••••••"
             />
-          </label>
+          </div>
 
           {error && (
             <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">

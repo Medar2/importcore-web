@@ -58,6 +58,43 @@ export async function login(
   return data as LoginResponse;
 }
 
+export async function requestPasswordReset(
+  email: string,
+): Promise<{ success: boolean; message: string }> {
+  const res = await fetch(`${BASE_URL}/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = Array.isArray(data.message)
+      ? data.message.join(', ')
+      : data.message ?? 'No se pudo enviar el correo de recuperación';
+    throw new Error(msg);
+  }
+  return data as { success: boolean; message: string };
+}
+
+export async function resetPasswordConfirm(
+  token: string,
+  newPassword: string,
+): Promise<{ success: boolean; message: string }> {
+  const res = await fetch(`${BASE_URL}/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, newPassword }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = Array.isArray(data.message)
+      ? data.message.join(', ')
+      : data.message ?? 'No se pudo restablecer la contraseña';
+    throw new Error(msg);
+  }
+  return data as { success: boolean; message: string };
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { Authorization: `Bearer ${getToken() ?? ''}` },
