@@ -2,42 +2,52 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Loader2, Plus } from 'lucide-react'
-import { apiGet, apiPost } from '@/lib/api'
+import { ChevronLeft, ChevronRight, Loader2, Plus, Search } from 'lucide-react'
+import { apiPost } from '@/lib/api'
+import { customersService } from '@/features/customers/services/customers.service'
+import type { CustomerPage } from '@/features/customers/services/customers.service'
+import type { Customer } from '@/features/customers/types'
 import { withPermission } from '@/features/auth/components/permission-gate'
 import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
 import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
-interface Customer {
-  id: string
-  name: string
-  taxId: string
-  customerType: string
-  phone: string | null
-  email: string | null
-  isActive: boolean
-}
-
 const inputCls =
   'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring'
+
+const PAGE_SIZES = [10, 20, 50]
 
 function CustomersPageContent() {
   const { user } = useCurrentUser()
   const canWrite = can(user, IMPORTCORE_PERMS.CUSTOMERS_WRITE)
-  const [customers, setCustomers] = useState<Customer[]>([])
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+  const [data, setData] = useState<CustomerPage | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', taxId: '', phone: '', email: '' })
   const [saving, setSaving] = useState(false)
 
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 350)
+    return () => clearTimeout(t)
+  }, [search])
+
   function load() {
-    apiGet<Customer[]>('/customers')
-      .then(setCustomers)
+    setLoading(true)
+    setError(null)
+    customersService
+      .listPage({ search: debouncedSearch, page, pageSize })
+      .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }
-  useEffect(load, [])
+  useEffect(load, [debouncedSearch, page, pageSize])
 
   async function create(e: React.FormEvent) {
     e.preventDefault()
@@ -52,6 +62,7 @@ function CustomersPageContent() {
       })
       setForm({ name: '', taxId: '', phone: '', email: '' })
       setShowForm(false)
+      setPage(1)
       load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error')
@@ -59,6 +70,8 @@ function CustomersPageContent() {
       setSaving(false)
     }
   }
+
+  const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1
 
   return (
     <main className="min-h-dvh bg-background pb-10">
@@ -75,6 +88,16 @@ function CustomersPageContent() {
       </header>
 
       <div className="mx-auto max-w-3xl space-y-3 p-4">
+        <label className="relative block">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nombre, RNC/cédula, email o teléfono…"
+            className={`${inputCls} pl-9`}
+          />
+        </label>
+
         {showForm && canWrite && (
           <form onSubmit={create} className="rounded-xl border border-border bg-card p-4">
             <h2 className="mb-3 text-sm font-semibold">Nuevo cliente</h2>
@@ -94,7 +117,13 @@ function CustomersPageContent() {
         {error && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
         {loading && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Cargando…</p>}
 
-        {!loading && customers.map((c) => (
+        {!loading && data && data.items.length === 0 && (
+          <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+            {debouncedSearch ? 'Sin clientes para esa búsqueda.' : 'Sin clientes registrados.'}
+          </p>
+        )}
+
+        {data?.items.map((c: Customer) => (
           <article key={c.id} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-start justify-between">
               <div>
@@ -110,6 +139,47 @@ function CustomersPageContent() {
             )}
           </article>
         ))}
+
+        {data && data.total > 0 && (
+          <div className="flex flex-col gap-2 rounded-xl border border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-muted-foreground">
+              {data.total} cliente(s) · página {data.page} de {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value))
+                  setPage(1)
+                }}
+                className="rounded-lg border border-input bg-background px-2 py-1.5 text-xs outline-none"
+                aria-label="Clientes por página"
+              >
+                {PAGE_SIZES.map((size) => (
+                  <option key={size} value={size}>
+                    {size} / página
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1 || loading}
+                className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium disabled:opacity-40"
+              >
+                <ChevronLeft className="size-3.5" /> Anterior
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages || loading}
+                className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium disabled:opacity-40"
+              >
+                Siguiente <ChevronRight className="size-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   )
