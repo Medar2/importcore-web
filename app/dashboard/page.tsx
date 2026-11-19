@@ -86,16 +86,18 @@ export default function DashboardPage() {
   ).length
   const failedCount = statsValues.filter((s) => !s.ok).length
 
-  const dateLabel = useMemo(
-    () =>
+  const [dateLabel, setDateLabel] = useState('')
+
+  useEffect(() => {
+    setDateLabel(
       new Date().toLocaleDateString('es-DO', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
         year: 'numeric',
       }),
-    [],
-  )
+    )
+  }, [])
   const updatedLabel = updatedAt
     ? updatedAt.toLocaleTimeString('es-DO', {
         hour: '2-digit',
@@ -104,7 +106,7 @@ export default function DashboardPage() {
     : '—'
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-[#f3f5f8] text-[#23232C]">
       <DashboardHeader
         dateLabel={dateLabel}
         refreshing={loading}

@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CheckCircle2, ChevronDown, ChevronUp, Loader2, Navigation, Package, Plus, Ship } from 'lucide-react'
+import { Loader2, Navigation, Plus, Ship } from 'lucide-react'
 import { apiGet, apiPost } from '@/lib/api'
 import { containersService } from '@/features/shipping/services/containers.service'
 import type { ContainerOccupancy, TrackingSyncResult } from '@/features/shipping/services/containers.service'
+import { ContainerBay } from '@/features/shipping/components/container-bay'
+import { CONTAINER_STATUS_LABEL } from '@/features/quotes/utils/quote-status'
 
 interface Container {
   id: string
@@ -55,7 +57,6 @@ export default function ContainersPage() {
   const [optResult, setOptResult] = useState<OptimizeResult | null>(null)
   const [demurrage, setDemurrage] = useState<Record<string, Demurrage>>({})
   const [occupancy, setOccupancy] = useState<Record<string, ContainerOccupancy>>({})
-  const [expandedDetails, setExpandedDetails] = useState<Record<string, boolean>>({})
   const [trackingLoading, setTrackingLoading] = useState<Record<string, boolean>>({})
   const [trackingInfo, setTrackingInfo] = useState<Record<string, TrackingSyncResult['tracking']>>({})
 
@@ -88,10 +89,6 @@ export default function ContainersPage() {
     } finally {
       setTrackingLoading((m) => ({ ...m, [id]: false }))
     }
-  }
-
-  function toggleExpand(id: string) {
-    setExpandedDetails((m) => ({ ...m, [id]: !m[id] }))
   }
 
   async function create(e: React.FormEvent) {
@@ -142,7 +139,7 @@ export default function ContainersPage() {
         </button>
       </header>
 
-      <div className="mx-auto max-w-3xl space-y-3 p-4">
+      <div className="mx-auto max-w-5xl space-y-3 p-4">
         {/* Optimizador CBM */}
         <section className="rounded-xl border border-border bg-card p-4">
           <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold"><Ship className="size-4 text-primary" /> Optimizar carga</h2>
@@ -219,15 +216,6 @@ export default function ContainersPage() {
           const occ = occupancy[c.id]
           const trk = trackingInfo[c.id]
           const isSyncing = trackingLoading[c.id]
-          const isExpanded = expandedDetails[c.id]
-
-          const cbmPercent = occ?.occupancyCbmPercent ?? 0
-          const progressColor =
-            cbmPercent > 100
-              ? 'bg-destructive'
-              : cbmPercent >= 85
-                ? 'bg-amber-500'
-                : 'bg-primary'
 
           return (
             <article key={c.id} className="space-y-3 rounded-xl border border-border bg-card p-4">
@@ -235,7 +223,9 @@ export default function ContainersPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-base">{c.containerNumber}</p>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_STYLE[c.status] ?? ''}`}>{c.status}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_STYLE[c.status] ?? ''}`}>
+                      {CONTAINER_STATUS_LABEL[c.status] ?? c.status}
+                    </span>
                   </div>
                   <p className="text-xs text-muted-foreground">{c.containerType}{c.blNumber ? ` · BL ${c.blNumber}` : ''}</p>
                 </div>
@@ -254,35 +244,15 @@ export default function ContainersPage() {
                 </button>
               </div>
 
-              {/* Barra de Ocupación Porcentual (% CBM) */}
-              {occ && (
-                <div className="space-y-1.5 rounded-lg border border-border/60 bg-muted/30 p-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium flex items-center gap-1">
-                      <Package className="size-3 text-primary" /> Ocupación del Contenedor:
-                    </span>
-                    <span className="font-bold">
-                      {occ.occupancyCbmPercent}% CBM ({occ.usedCbm} / {occ.capacityCbm} m³)
-                    </span>
-                  </div>
-                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={`h-full transition-all duration-500 ${progressColor}`}
-                      style={{ width: `${Math.min(cbmPercent, 100)}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span>
-                      Disponible: <b>{occ.remainingCbm} CBM</b>
-                    </span>
-                    <span>
-                      Peso: <b>{occ.usedKg} / {occ.capacityKg} kg</b> ({occ.occupancyKgPercent}%)
-                    </span>
-                  </div>
-                </div>
-              )}
+              <ContainerBay containerType={c.containerType} occupancy={occ ?? null} />
 
               {/* Información Logística de Fechas */}
+              {occ && (
+                <p className="text-xs text-muted-foreground">
+                  Peso {occ.usedKg.toLocaleString('es-DO')} / {occ.capacityKg.toLocaleString('es-DO')} kg ({occ.occupancyKgPercent}%)
+                </p>
+              )}
+
               <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
                 <div>
                   <span className="block text-[10px] uppercase">ETD (Zarpe)</span>
@@ -313,39 +283,6 @@ export default function ContainersPage() {
                 </p>
               )}
 
-              {/* Desglose de Pedidos y Cotizaciones Asignadas */}
-              {occ && occ.items.length > 0 && (
-                <div>
-                  <button
-                    onClick={() => toggleExpand(c.id)}
-                    className="flex w-full items-center justify-between pt-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
-                  >
-                    <span>Cargas asignadas ({occ.items.length})</span>
-                    {isExpanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
-                  </button>
-
-                  {isExpanded && (
-                    <div className="mt-2 space-y-1.5 border-t border-border/50 pt-2">
-                      {occ.items.map((it) => (
-                        <div
-                          key={it.id}
-                          className="flex items-center justify-between rounded-md bg-card px-2.5 py-1.5 text-xs border border-border/40"
-                        >
-                          <div>
-                            <span className="font-semibold text-primary">{it.reference}</span>
-                            <span className="text-muted-foreground"> · {it.customerName ?? 'Cliente'}</span>
-                            <span className="ml-2 rounded px-1.5 py-0.2 text-[10px] bg-muted">{it.status}</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="font-bold">{it.cbm} CBM</span>
-                            <span className="text-[11px] text-muted-foreground"> ({it.cbmSharePercent}% del cont.)</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
             </article>
           )
         })}

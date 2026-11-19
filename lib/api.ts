@@ -28,6 +28,59 @@ export function clearToken(): void {
   localStorage.removeItem(REFRESH_KEY);
 }
 
+let refreshInFlight: Promise<string | null> | null = null;
+
+/** Un solo refresh compartido si varias pantallas reciben 401 a la vez. */
+function refreshAccessToken(): Promise<string | null> {
+  if (refreshInFlight) return refreshInFlight;
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return Promise.resolve(null);
+
+  refreshInFlight = fetch(`${BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
+  })
+    .then(async (res) => {
+      if (!res.ok) return null;
+      const data = (await res.json()) as { accessToken?: string };
+      if (!data.accessToken) return null;
+      setToken(data.accessToken);
+      return data.accessToken;
+    })
+    .catch(() => null)
+    .finally(() => {
+      refreshInFlight = null;
+    });
+
+  return refreshInFlight;
+}
+
+function redirectToLogin(): void {
+  clearToken();
+  if (typeof window === 'undefined') return;
+  if (window.location.pathname.startsWith('/login')) return;
+  window.location.assign('/login');
+}
+
+async function authorizedFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const send = (token: string | null) => {
+    const headers = new Headers(init.headers);
+    if (token) headers.set('Authorization', `Bearer ${token}`);
+    return fetch(`${BASE_URL}${path}`, { ...init, headers, cache: 'no-store' });
+  };
+
+  const res = await send(getToken());
+  if (res.status !== 401 || path.startsWith('/auth/')) return res;
+
+  const next = await refreshAccessToken();
+  if (!next) {
+    redirectToLogin();
+    return res;
+  }
+  return send(next);
+}
+
 /** Cierra en el servidor solo la sesión de este dispositivo (best effort). */
 export async function logoutDevice(): Promise<void> {
   const refreshToken = getRefreshToken();
@@ -96,10 +149,7 @@ export async function resetPasswordConfirm(
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { Authorization: `Bearer ${getToken() ?? ''}` },
-    cache: 'no-store',
-  });
+  const res = await authorizedFetch(path);
   if (!res.ok) throw new Error(`API ${res.status} en ${path}`);
   return res.json() as Promise<T>;
 }
@@ -109,12 +159,9 @@ async function apiSend<T>(
   path: string,
   body?: unknown,
 ): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await authorizedFetch(path, {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken() ?? ''}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
@@ -140,9 +187,7 @@ export function pdfUrl(path: string): string {
 }
 
 export async function downloadFile(path: string, filename: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { Authorization: `Bearer ${getToken() ?? ''}` },
-  });
+  const res = await authorizedFetch(path);
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error((data as { message?: string }).message ?? `Error ${res.status}`);
@@ -156,9 +201,7 @@ export async function downloadFile(path: string, filename: string): Promise<void
 }
 
 export async function downloadPdf(path: string, filename: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { Authorization: `Bearer ${getToken() ?? ''}` },
-  });
+  const res = await authorizedFetch(path);
   if (!res.ok) throw new Error(`No se pudo generar el PDF (${res.status})`);
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);

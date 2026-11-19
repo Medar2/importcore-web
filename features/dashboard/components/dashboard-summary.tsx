@@ -16,22 +16,18 @@ function Stat({
   label,
   value,
   hint,
-  valueClassName,
 }: {
   label: string
   value: ReactNode
   hint: string
-  valueClassName?: string
 }) {
   return (
-    <div className="rounded-xl border border-border bg-background/70 p-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="rounded-xl bg-white px-3 py-3 text-[#23232C] shadow-sm">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#DD3333]">
         {label}
       </p>
-      <div className={cn('mt-1 text-xl font-bold tabular-nums', valueClassName)}>
-        {value}
-      </div>
-      <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+      <div className="mt-1 text-2xl font-semibold tabular-nums text-[#003399]">{value}</div>
+      <p className="mt-0.5 text-xs text-[#5c6472]">{hint}</p>
     </div>
   )
 }
@@ -53,90 +49,83 @@ export function DashboardSummary({
         : 'degraded'
 
   const statusMeta = {
-    checking: {
-      label: 'Verificando',
-      dot: 'bg-muted-foreground',
-      valueClassName: 'text-muted-foreground',
-      hint: 'Consultando endpoints',
-    },
-    ok: {
-      label: 'Operativa',
-      dot: 'bg-success',
-      valueClassName: 'text-success',
-      hint: 'Todos los endpoints respondieron',
-    },
-    degraded: {
-      label: 'Parcial',
-      dot: 'bg-warning',
-      valueClassName: 'text-warning',
-      hint: `${failedCount} módulo(s) sin respuesta`,
-    },
-    down: {
-      label: 'Sin conexión',
-      dot: 'bg-destructive',
-      valueClassName: 'text-destructive',
-      hint: 'API no disponible',
-    },
+    checking: { label: 'Verificando', hint: 'Consultando la operación' },
+    ok: { label: 'Operativa', hint: 'Todos los módulos respondieron' },
+    degraded: { label: 'Parcial', hint: `${failedCount} módulo(s) sin respuesta` },
+    down: { label: 'Sin conexión', hint: 'La API no está disponible' },
   }[status]
 
   return (
-    <section className="mx-auto max-w-6xl px-4 pt-6">
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <section className="relative overflow-hidden bg-[#003399] text-white">
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-1.5 bg-[#DD3333]" aria-hidden />
+      <div
+        className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-white/10"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -bottom-24 right-24 size-48 rounded-full bg-[#DD3333]/25"
+        aria-hidden
+      />
+
+      <div className="relative mx-auto max-w-6xl px-4 py-8 sm:py-10">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">
               Panel de operación
             </p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight">
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
               Resumen general
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Estado de los módulos de ImportCore RD.
+            <p className="mt-2 max-w-md text-sm leading-relaxed text-white/80">
+              Compras en China, contenedores y entrega en República Dominicana. Estado de ImportCore en este momento.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/quotes/new"
-              className="flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition hover:brightness-110"
+              className="flex h-11 items-center gap-1.5 rounded-lg bg-[#DD3333] px-4 text-sm font-semibold text-white shadow-sm transition hover:brightness-110"
             >
               <Plus className="size-4" /> Nueva cotización
             </Link>
             <Link
               href="/orders"
-              className="flex h-10 items-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-semibold text-foreground transition hover:bg-secondary"
+              className="flex h-11 items-center gap-1.5 rounded-lg border border-white/70 bg-transparent px-4 text-sm font-semibold text-white transition hover:bg-white hover:text-[#003399]"
             >
               <ClipboardList className="size-4" /> Pedidos
             </Link>
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Stat
-            label="Registros totales"
+            label="Registros"
             value={loading ? '…' : totalRecords.toLocaleString('es-DO')}
-            hint="Suma de módulos cargados"
+            hint="Suma de los módulos"
           />
           <Stat
-            label="Módulos con datos"
+            label="Con datos"
             value={loading ? '…' : `${modulesWithData}/${modulesTotal}`}
-            hint="Con al menos un registro"
+            hint="Módulos con registros"
           />
           <Stat
-            label="Estado API"
+            label="Estado"
             value={
-              <span className="inline-flex items-center gap-2">
-                <span className={cn('size-2 rounded-full', statusMeta.dot)} />
+              <span className="inline-flex items-center gap-2 text-xl text-[#003399]">
+                <span
+                  className={cn(
+                    'size-2.5 rounded-full',
+                    status === 'ok' && 'bg-[#003399]',
+                    status === 'checking' && 'bg-[#003399]/40',
+                    status === 'degraded' && 'bg-[#d99a2b]',
+                    status === 'down' && 'bg-[#DD3333]',
+                  )}
+                />
                 {statusMeta.label}
               </span>
             }
-            valueClassName={statusMeta.valueClassName}
             hint={statusMeta.hint}
           />
-          <Stat
-            label="Actualizado"
-            value={updatedLabel}
-            hint="Última consulta al API"
-          />
+          <Stat label="Actualizado" value={updatedLabel} hint="Última consulta" />
         </div>
       </div>
     </section>
