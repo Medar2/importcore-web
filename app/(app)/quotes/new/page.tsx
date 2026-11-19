@@ -104,7 +104,7 @@ export default function NewQuotePage() {
     setError(null)
     setLoading(true)
     try {
-      await quotesService.create({
+      const created = await quotesService.create({
         customerName: customerId ? undefined : customerName || undefined,
         customerId: customerId || undefined,
         validDays: Number(validDays) || undefined,
@@ -115,7 +115,7 @@ export default function NewQuotePage() {
         containerInsuranceUsd: insurance || undefined,
         markupPercent: markup || undefined,
       })
-      router.push('/quotes')
+      router.push(`/quotes/${created.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al crear')
       setLoading(false)

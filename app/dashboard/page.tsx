@@ -10,6 +10,19 @@ import { ModuleGrid } from '@/features/dashboard/components/module-grid'
 import { ProjectProgress } from '@/features/dashboard/components/project-progress'
 import { AdminShortcuts } from '@/features/dashboard/components/admin-shortcuts'
 
+function recordCount(data: unknown): number | null {
+  if (Array.isArray(data)) return data.length
+  if (
+    data &&
+    typeof data === 'object' &&
+    'total' in data &&
+    typeof (data as { total: unknown }).total === 'number'
+  ) {
+    return (data as { total: number }).total
+  }
+  return null
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [stats, setStats] = useState<Record<string, ModuleStat>>({})
@@ -31,7 +44,7 @@ export default function DashboardPage() {
       const results = await Promise.allSettled(
         MODULES.map(async (m) => {
           const data = await apiGet<unknown>(m.endpoint)
-          return [m.href, Array.isArray(data) ? data.length : null] as const
+          return [m.href, recordCount(data)] as const
         }),
       )
 
