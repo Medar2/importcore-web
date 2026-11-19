@@ -1,4 +1,5 @@
 import { Poppins } from 'next/font/google'
+import { AppShell } from '@/features/navigation/components/app-shell'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -6,5 +7,9 @@ const poppins = Poppins({
 })
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <div className={poppins.className}>{children}</div>
+  return (
+    <div className={poppins.className}>
+      <AppShell>{children}</AppShell>
+    </div>
+  )
 }

@@ -1,5 +1,4 @@
 import { RefreshCw } from 'lucide-react'
-import { UserMenu } from '@/features/auth/components/user-menu'
 import { FlagMark, Wordmark } from './brand'
 
 interface DashboardHeaderProps {
@@ -14,7 +13,7 @@ export function DashboardHeader({
   onRefresh,
 }: DashboardHeaderProps) {
   return (
-    <header className="sticky top-0 z-20 border-b border-[#003399]/10 bg-white/95 backdrop-blur">
+    <header className="sticky top-14 z-10 border-b border-[#003399]/10 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
         <div className="flex min-w-0 items-center gap-3">
           <FlagMark />
@@ -36,7 +35,6 @@ export function DashboardHeader({
           >
             <RefreshCw className={`size-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
-          <UserMenu />
         </div>
       </div>
       <div className="flex h-1" aria-hidden>

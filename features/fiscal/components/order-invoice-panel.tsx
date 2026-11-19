@@ -6,6 +6,8 @@ import { FileCheck2, Loader2 } from 'lucide-react'
 import { fiscalService } from '../services/fiscal.service'
 import type { FiscalDocument } from '../types'
 import { DOC_STATUS, dop } from '../utils'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
 interface Props {
   orderId: string
@@ -15,6 +17,8 @@ interface Props {
 
 /** e-CF de venta del pedido: muestra el vigente o permite emitirlo. */
 export function OrderInvoicePanel({ orderId, orderStatus, onError }: Props) {
+  const { user } = useCurrentUser()
+  const canEmit = can(user, IMPORTCORE_PERMS.FISCAL_EMIT_ECF)
   const [docs, setDocs] = useState<FiscalDocument[] | null>(null)
   const [emitting, setEmitting] = useState(false)
 
@@ -57,6 +61,8 @@ export function OrderInvoicePanel({ orderId, orderStatus, onError }: Props) {
         </div>
       ) : orderStatus === 'CANCELLED' ? (
         <p className="text-sm text-muted-foreground">Pedido cancelado.</p>
+      ) : !canEmit ? (
+        <p className="text-sm text-muted-foreground">Sin permiso para emitir e-CF.</p>
       ) : (
         <button
           onClick={emit}

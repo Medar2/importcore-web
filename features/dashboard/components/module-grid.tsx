@@ -1,10 +1,11 @@
-import { MODULES, type ModuleStat } from '../modules'
+import { MODULES, type ModuleDef, type ModuleStat } from '../modules'
 import { SectionHeading } from './brand'
 import { ModuleCard } from './module-card'
 
 interface ModuleGridProps {
   stats: Record<string, ModuleStat>
   loading: boolean
+  modules?: ModuleDef[]
 }
 
 function SkeletonCard() {
@@ -23,7 +24,7 @@ function SkeletonCard() {
   )
 }
 
-export function ModuleGrid({ stats, loading }: ModuleGridProps) {
+export function ModuleGrid({ stats, loading, modules = MODULES }: ModuleGridProps) {
   return (
     <section className="mt-8">
       <SectionHeading
@@ -33,8 +34,8 @@ export function ModuleGrid({ stats, loading }: ModuleGridProps) {
       />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {loading
-          ? Array.from({ length: MODULES.length }).map((_, i) => <SkeletonCard key={i} />)
-          : MODULES.map((m, index) => (
+          ? Array.from({ length: modules.length }).map((_, i) => <SkeletonCard key={i} />)
+          : modules.map((m, index) => (
               <ModuleCard
                 key={m.href}
                 def={m}

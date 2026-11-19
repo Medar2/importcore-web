@@ -6,6 +6,8 @@ import { Loader2 } from 'lucide-react'
 import { fiscalService } from '../services/fiscal.service'
 import type { FiscalCatalogs, FiscalDocument } from '../types'
 import { DOC_STATUS, dop, fromMonthInput, inputCls, toMonthInput } from '../utils'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
 interface Props {
   period: string
@@ -15,6 +17,8 @@ interface Props {
 }
 
 export function DocumentsTab({ period, onPeriodChange, catalogs, onError }: Props) {
+  const { user } = useCurrentUser()
+  const canEmit = can(user, IMPORTCORE_PERMS.FISCAL_EMIT_ECF)
   const [docs, setDocs] = useState<FiscalDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [cancelling, setCancelling] = useState<string | null>(null)
@@ -69,12 +73,12 @@ export function DocumentsTab({ period, onPeriodChange, catalogs, onError }: Prop
             {d.provider === 'mock' && <span className="font-semibold text-warning">Simulado — sin validez fiscal</span>}
             {d.securityCode && <span>Código: {d.securityCode}</span>}
             {d.orderId && <Link href={`/orders/${d.orderId}`} className="underline">Ver pedido</Link>}
-            {d.status !== 'CANCELLED' && cancelling !== d.id && (
+            {canEmit && d.status !== 'CANCELLED' && cancelling !== d.id && (
               <button onClick={() => setCancelling(d.id)} className="text-destructive underline">Anular</button>
             )}
           </div>
 
-          {cancelling === d.id && (
+          {canEmit && cancelling === d.id && (
             <div className="mt-3 grid gap-2 rounded-lg border border-destructive/30 p-3">
               <select className={inputCls} value={cancelType} onChange={(e) => setCancelType(e.target.value)}>
                 {Object.entries(catalogs?.cancellationTypes ?? {}).map(([k, v]) => (

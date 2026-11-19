@@ -8,6 +8,8 @@ import { DocumentsTab } from '@/features/fiscal/components/documents-tab'
 import { PurchasesTab } from '@/features/fiscal/components/purchases-tab'
 import { ReportsTab } from '@/features/fiscal/components/reports-tab'
 import { SequencesTab } from '@/features/fiscal/components/sequences-tab'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { IMPORTCORE_PERMS } from '@/features/auth/utils/permissions'
 
 const TABS = [
   { id: 'documents', label: 'Comprobantes' },
@@ -17,7 +19,7 @@ const TABS = [
 ] as const
 type TabId = (typeof TABS)[number]['id']
 
-export default function FiscalPage() {
+function FiscalPageContent() {
   const [tab, setTab] = useState<TabId>('documents')
   const [period, setPeriod] = useState(currentPeriod)
   const [catalogs, setCatalogs] = useState<FiscalCatalogs | null>(null)
@@ -60,3 +62,5 @@ export default function FiscalPage() {
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.FISCAL_READ], FiscalPageContent)

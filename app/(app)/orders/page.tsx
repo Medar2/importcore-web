@@ -6,6 +6,8 @@ import { Loader2 } from 'lucide-react'
 import { ordersService } from '@/features/orders/services/orders.service'
 import type { Order } from '@/features/orders/services/orders.service'
 import { statusLabel } from '@/features/orders/utils/order-status'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { IMPORTCORE_PERMS } from '@/features/auth/utils/permissions'
 
 const STATUS_STYLE: Record<string, string> = {
   PENDING: 'bg-muted text-muted-foreground',
@@ -17,7 +19,7 @@ const STATUS_STYLE: Record<string, string> = {
   CANCELLED: 'bg-destructive/15 text-destructive',
 }
 
-export default function OrdersPage() {
+function OrdersPageContent() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -84,3 +86,5 @@ export default function OrdersPage() {
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.ORDERS_READ], OrdersPageContent)

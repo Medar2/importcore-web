@@ -6,6 +6,8 @@ import { fiscalService } from '../services/fiscal.service'
 import type { FiscalCatalogs, FiscalPurchase } from '../types'
 import { dop, fromMonthInput, inputCls, toMonthInput } from '../utils'
 import { NewFiscalPurchaseForm } from './new-fiscal-purchase-form'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
 interface Props {
   period: string
@@ -15,6 +17,8 @@ interface Props {
 }
 
 export function PurchasesTab({ period, onPeriodChange, catalogs, onError }: Props) {
+  const { user } = useCurrentUser()
+  const canManage = can(user, IMPORTCORE_PERMS.FISCAL_MANAGE)
   const [rows, setRows] = useState<FiscalPurchase[]>([])
   const [showForm, setShowForm] = useState(false)
 
@@ -37,12 +41,14 @@ export function PurchasesTab({ period, onPeriodChange, catalogs, onError }: Prop
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <input type="month" className={`${inputCls} max-w-48`} value={toMonthInput(period)} onChange={(e) => e.target.value && onPeriodChange(fromMonthInput(e.target.value))} />
-        <button onClick={() => setShowForm((v) => !v)} className="ml-auto flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">
-          <Plus className="size-4" /> Compra
-        </button>
+        {canManage && (
+          <button onClick={() => setShowForm((v) => !v)} className="ml-auto flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">
+            <Plus className="size-4" /> Compra
+          </button>
+        )}
       </div>
 
-      {showForm && (
+      {showForm && canManage && (
         <NewFiscalPurchaseForm catalogs={catalogs} onError={onError} onCreated={() => { setShowForm(false); load() }} />
       )}
 
@@ -64,9 +70,11 @@ export function PurchasesTab({ period, onPeriodChange, catalogs, onError }: Prop
               <span className="text-muted-foreground"> · ITBIS {dop(r.itbisBilled)}</span>
             </p>
           </div>
-          <button onClick={() => remove(r.id)} aria-label="Eliminar" className="shrink-0 rounded-lg p-2 text-muted-foreground hover:text-destructive">
-            <Trash2 className="size-4" />
-          </button>
+          {canManage && (
+            <button onClick={() => remove(r.id)} aria-label="Eliminar" className="shrink-0 rounded-lg p-2 text-muted-foreground hover:text-destructive">
+              <Trash2 className="size-4" />
+            </button>
+          )}
         </article>
       ))}
     </div>

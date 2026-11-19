@@ -17,6 +17,8 @@ import {
   formatUsd,
 } from '@/features/quotes/utils/quote-status'
 import { STATUS_LABEL } from '@/features/orders/utils/order-status'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { IMPORTCORE_PERMS } from '@/features/auth/utils/permissions'
 
 function containerLabel(type: string | null | undefined) {
   if (!type) return '—'
@@ -125,7 +127,7 @@ function LineDetail({
   )
 }
 
-export default function QuoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function QuoteDetailPageContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [quote, setQuote] = useState<QuoteDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -423,3 +425,5 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.QUOTES_READ], QuoteDetailPageContent)

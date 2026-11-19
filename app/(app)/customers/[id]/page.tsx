@@ -5,12 +5,14 @@ import Link from 'next/link'
 import { ArrowLeft, Loader2, Mail, MapPin, Phone, UserRound } from 'lucide-react'
 import { customersService } from '@/features/customers/services/customers.service'
 import type { Customer } from '@/features/customers/types'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { IMPORTCORE_PERMS } from '@/features/auth/utils/permissions'
 
 function formatDate(value?: string | null) {
   return value ? value.slice(0, 10) : '—'
 }
 
-export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function CustomerDetailPageContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [loading, setLoading] = useState(true)
@@ -120,3 +122,5 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.CUSTOMERS_READ], CustomerDetailPageContent)

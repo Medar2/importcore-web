@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Loader2, Package, Plus } from 'lucide-react'
 import { apiGet, apiPost } from '@/lib/api'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
 interface Product {
   id: string
@@ -29,7 +32,9 @@ const EMPTY = {
   boxGrossWeightKg: '', unitFobPriceUsd: '', tariffHeadingId: '',
 }
 
-export default function ProductsPage() {
+function ProductsPageContent() {
+  const { user } = useCurrentUser()
+  const canWrite = can(user, IMPORTCORE_PERMS.PRODUCTS_WRITE)
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -75,13 +80,15 @@ export default function ProductsPage() {
     <main className="min-h-dvh bg-background pb-10">
       <header className="sticky top-14 z-10 flex items-center justify-between border-b border-border bg-card px-4 py-3">
         <h1 className="font-bold">Productos</h1>
-        <button onClick={() => setShowForm((v) => !v)} className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground">
-          <Plus className="size-4" /> Nuevo
-        </button>
+        {canWrite && (
+          <button onClick={() => setShowForm((v) => !v)} className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground">
+            <Plus className="size-4" /> Nuevo
+          </button>
+        )}
       </header>
 
       <div className="mx-auto max-w-3xl space-y-3 p-4">
-        {showForm && (
+        {showForm && canWrite && (
           <form onSubmit={create} className="rounded-xl border border-border bg-card p-4">
             <h2 className="mb-3 text-sm font-semibold">Nuevo producto</h2>
             <div className="grid grid-cols-2 gap-2">
@@ -152,3 +159,5 @@ export default function ProductsPage() {
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.PRODUCTS_READ], ProductsPageContent)

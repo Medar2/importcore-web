@@ -9,12 +9,19 @@ import { OrderStatusPanel } from '@/features/orders/components/order-status-pane
 import { statusLabel } from '@/features/orders/utils/order-status'
 import { OrderInvoicePanel } from '@/features/fiscal/components/order-invoice-panel'
 import { apiGet } from '@/lib/api'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
 const inputCls =
   'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring'
 
-export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function OrderDetailPageContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const { user } = useCurrentUser()
+  const canRegisterPayment = can(user, IMPORTCORE_PERMS.ORDERS_REGISTER_PAYMENT)
+  const canAuthorizeDispatch = can(user, IMPORTCORE_PERMS.ORDERS_AUTHORIZE_DISPATCH)
+  const canOverrideDispatch = can(user, IMPORTCORE_PERMS.ORDERS_OVERRIDE_DISPATCH)
   const [order, setOrder] = useState<Order | null>(null)
   const [balance, setBalance] = useState<OrderBalance | null>(null)
   const [tracking, setTracking] = useState<OrderTrackingResult | null>(null)
@@ -70,6 +77,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   }
 
   async function dispatch() {
+    if (balance?.dispatchLocked && !canOverrideDispatch) {
+      setError('El despacho está bloqueado por saldo y tu rol no tiene permiso de override.')
+      return
+    }
     if (balance?.dispatchLocked) {
       const reason = window.prompt('Hay balance pendiente. Motivo del override (obligatorio):')
       if (!reason) return
@@ -106,7 +117,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     return <main className="p-6 text-sm text-destructive">{error ?? 'Pedido no encontrado'}</main>
   }
 
-  const canDispatch = order.status === 'READY'
+  const canDispatch = order.status === 'READY' && canAuthorizeDispatch
 
   return (
     <main className="min-h-dvh bg-background pb-10">
@@ -232,33 +243,35 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           </section>
         )}
 
-        <section className="rounded-xl border border-border bg-card p-4">
-          <h2 className="mb-3 text-sm font-semibold">Registrar pago / anticipo</h2>
-          <form onSubmit={pay} className="grid grid-cols-2 gap-2">
-            <input className={inputCls} placeholder="Monto" value={amount} onChange={(e) => setAmount(e.target.value)} required />
-            <select className={inputCls} value={currency} onChange={(e) => setCurrency(e.target.value)}>
-              <option value="USD">USD</option>
-              <option value="DOP">DOP</option>
-              <option value="CNY">CNY</option>
-            </select>
-            {currency !== 'USD' && (
-              <input className={`${inputCls} col-span-2`} placeholder="Tasa a USD (ej. 60.5)" value={rate} onChange={(e) => setRate(e.target.value)} required />
-            )}
-            <select className={inputCls} value={method} onChange={(e) => setMethod(e.target.value)}>
-              {['TRANSFER', 'CASH', 'CHECK', 'CARD', 'OTHER'].map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-            <input className={inputCls} placeholder="Referencia" value={reference} onChange={(e) => setReference(e.target.value)} />
-            <button
-              type="submit"
-              disabled={paying}
-              className="col-span-2 rounded-lg bg-primary py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
-            >
-              {paying ? 'Registrando…' : 'Registrar pago'}
-            </button>
-          </form>
-        </section>
+        {canRegisterPayment && (
+          <section className="rounded-xl border border-border bg-card p-4">
+            <h2 className="mb-3 text-sm font-semibold">Registrar pago / anticipo</h2>
+            <form onSubmit={pay} className="grid grid-cols-2 gap-2">
+              <input className={inputCls} placeholder="Monto" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+              <select className={inputCls} value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                <option value="USD">USD</option>
+                <option value="DOP">DOP</option>
+                <option value="CNY">CNY</option>
+              </select>
+              {currency !== 'USD' && (
+                <input className={`${inputCls} col-span-2`} placeholder="Tasa a USD (ej. 60.5)" value={rate} onChange={(e) => setRate(e.target.value)} required />
+              )}
+              <select className={inputCls} value={method} onChange={(e) => setMethod(e.target.value)}>
+                {['TRANSFER', 'CASH', 'CHECK', 'CARD', 'OTHER'].map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+              <input className={inputCls} placeholder="Referencia" value={reference} onChange={(e) => setReference(e.target.value)} />
+              <button
+                type="submit"
+                disabled={paying}
+                className="col-span-2 rounded-lg bg-primary py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
+              >
+                {paying ? 'Registrando…' : 'Registrar pago'}
+              </button>
+            </form>
+          </section>
+        )}
 
         {canDispatch && (
           <button
@@ -279,3 +292,5 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.ORDERS_READ], OrderDetailPageContent)

@@ -5,6 +5,8 @@ import { Check, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ordersService } from '../services/orders.service'
 import { ORDER_STEPS, nextStatuses, statusLabel } from '../utils/order-status'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
 interface Props {
   orderId: string
@@ -14,6 +16,8 @@ interface Props {
 }
 
 export function OrderStatusPanel({ orderId, status, onChanged, onError }: Props) {
+  const { user } = useCurrentUser()
+  const canWrite = can(user, IMPORTCORE_PERMS.ORDERS_WRITE)
   const [saving, setSaving] = useState<string | null>(null)
   const currentIdx = ORDER_STEPS.indexOf(status as (typeof ORDER_STEPS)[number])
   const next = nextStatuses(status)
@@ -67,7 +71,7 @@ export function OrderStatusPanel({ orderId, status, onChanged, onError }: Props)
         </ol>
       )}
 
-      {next.length > 0 && (
+      {canWrite && next.length > 0 && (
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           {next.map((to) => (
             <button

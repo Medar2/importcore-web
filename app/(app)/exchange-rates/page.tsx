@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react'
 import { Loader2, Plus } from 'lucide-react'
 import { apiGet, apiPost } from '@/lib/api'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
 interface ExchangeRate {
   id: string
@@ -16,7 +19,9 @@ interface ExchangeRate {
 const inputCls =
   'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring'
 
-export default function ExchangeRatesPage() {
+function ExchangeRatesPageContent() {
+  const { user } = useCurrentUser()
+  const canManage = can(user, IMPORTCORE_PERMS.EXCHANGE_RATES_MANAGE)
   const [rates, setRates] = useState<ExchangeRate[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -49,13 +54,15 @@ export default function ExchangeRatesPage() {
     <main className="min-h-dvh bg-background pb-10">
       <header className="sticky top-14 z-10 flex items-center justify-between border-b border-border bg-card px-4 py-3">
         <h1 className="font-bold">Tasas de cambio</h1>
-        <button onClick={() => setShowForm((v) => !v)} className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground">
-          <Plus className="size-4" /> Nueva
-        </button>
+        {canManage && (
+          <button onClick={() => setShowForm((v) => !v)} className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground">
+            <Plus className="size-4" /> Nueva
+          </button>
+        )}
       </header>
 
       <div className="mx-auto max-w-3xl space-y-3 p-4">
-        {showForm && (
+        {showForm && canManage && (
           <form onSubmit={create} className="rounded-xl border border-border bg-card p-4">
             <h2 className="mb-3 text-sm font-semibold">Registrar tasa</h2>
             <div className="grid grid-cols-2 gap-2">
@@ -93,3 +100,5 @@ export default function ExchangeRatesPage() {
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.EXCHANGE_RATES_READ], ExchangeRatesPageContent)

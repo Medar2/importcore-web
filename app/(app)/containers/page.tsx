@@ -7,6 +7,9 @@ import { containersService } from '@/features/shipping/services/containers.servi
 import type { ContainerOccupancy, TrackingSyncResult } from '@/features/shipping/services/containers.service'
 import { ContainerBay } from '@/features/shipping/components/container-bay'
 import { CONTAINER_STATUS_LABEL } from '@/features/quotes/utils/quote-status'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
 interface Container {
   id: string
@@ -45,7 +48,9 @@ const STATUS_STYLE: Record<string, string> = {
   RETURNED: 'bg-muted text-muted-foreground',
 }
 
-export default function ContainersPage() {
+function ContainersPageContent() {
+  const { user } = useCurrentUser()
+  const canWrite = can(user, IMPORTCORE_PERMS.CONTAINERS_WRITE)
   const [containers, setContainers] = useState<Container[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -131,12 +136,14 @@ export default function ContainersPage() {
           <h1 className="font-bold">Contenedores y Tracking Marítimo</h1>
           <p className="text-xs text-muted-foreground">Ocupación volumétrica (% CBM) y seguimiento desde China</p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
-        >
-          <Plus className="size-3.5" /> Nuevo contenedor
-        </button>
+        {canWrite && (
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
+          >
+            <Plus className="size-3.5" /> Nuevo contenedor
+          </button>
+        )}
       </header>
 
       <div className="mx-auto max-w-5xl space-y-3 p-4">
@@ -165,7 +172,7 @@ export default function ContainersPage() {
           )}
         </section>
 
-        {showForm && (
+        {showForm && canWrite && (
           <form onSubmit={create} className="rounded-xl border border-border bg-card p-4">
             <h2 className="mb-3 text-sm font-semibold">Nuevo contenedor</h2>
             <div className="grid grid-cols-2 gap-3">
@@ -229,19 +236,21 @@ export default function ContainersPage() {
                   </div>
                   <p className="text-xs text-muted-foreground">{c.containerType}{c.blNumber ? ` · BL ${c.blNumber}` : ''}</p>
                 </div>
-                <button
-                  onClick={() => handleSyncTracking(c.id)}
-                  disabled={isSyncing}
-                  className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 disabled:opacity-60"
-                  title="Sincronizar hito marítimo en tiempo real"
-                >
-                  {isSyncing ? (
-                    <Loader2 className="size-3.5 animate-spin" />
-                  ) : (
-                    <Navigation className="size-3.5" />
-                  )}
-                  {isSyncing ? 'Rastreando…' : 'Rastrear en Vivo'}
-                </button>
+                {canWrite && (
+                  <button
+                    onClick={() => handleSyncTracking(c.id)}
+                    disabled={isSyncing}
+                    className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 disabled:opacity-60"
+                    title="Sincronizar hito marítimo en tiempo real"
+                  >
+                    {isSyncing ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Navigation className="size-3.5" />
+                    )}
+                    {isSyncing ? 'Rastreando…' : 'Rastrear en Vivo'}
+                  </button>
+                )}
               </div>
 
               <ContainerBay containerType={c.containerType} occupancy={occ ?? null} />
@@ -290,3 +299,5 @@ export default function ContainersPage() {
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.CONTAINERS_READ], ContainersPageContent)

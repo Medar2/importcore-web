@@ -15,6 +15,9 @@ import {
 } from 'lucide-react'
 import { productsService } from '@/features/products/services/products.service'
 import type { Product, ProductDetail } from '@/features/products/types'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
 const MAX_IMAGES = 10
 const MIN_RECOMMENDED_IMAGES = 5
@@ -65,8 +68,10 @@ function RelatedProductCard({ product }: { product: Product }) {
   )
 }
 
-export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function ProductDetailPageContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const { user } = useCurrentUser()
+  const canWrite = can(user, IMPORTCORE_PERMS.PRODUCTS_WRITE)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [product, setProduct] = useState<ProductDetail | null>(null)
   const [selectedImage, setSelectedImage] = useState(0)
@@ -89,7 +94,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   useEffect(load, [id])
 
   async function uploadImages(files: FileList | null) {
-    if (!files?.length || !product) return
+    if (!canWrite || !files?.length || !product) return
     const remaining = MAX_IMAGES - (product.imageUrls?.length ?? 0)
     if (remaining <= 0) {
       setError(`Máximo ${MAX_IMAGES} imágenes por producto`)
@@ -111,7 +116,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   }
 
   async function removeImage(index: number) {
-    if (!product) return
+    if (!canWrite || !product) return
     const imageUrls = (product.imageUrls ?? []).filter((_, i) => i !== index)
     setError(null)
     try {
@@ -186,14 +191,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                         >
                           <ProductImage src={src} alt={`${product.sku} ${index + 1}`} className="size-full" />
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow"
-                          aria-label={`Eliminar imagen ${index + 1}`}
-                        >
-                          <X className="size-3" />
-                        </button>
+                        {canWrite && (
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow"
+                            aria-label={`Eliminar imagen ${index + 1}`}
+                          >
+                            <X className="size-3" />
+                          </button>
+                        )}
                       </>
                     ) : (
                       <div className="flex size-full items-center justify-center rounded-lg border border-dashed border-border bg-muted/50">
@@ -214,15 +221,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               onChange={(e) => uploadImages(e.target.files)}
             />
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading || images.length >= MAX_IMAGES}
-                className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
-              >
-                {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <ImagePlus className="size-3.5" />}
-                {images.length ? 'Agregar imágenes' : 'Subir imágenes'}
-              </button>
+              {canWrite && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading || images.length >= MAX_IMAGES}
+                  className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+                >
+                  {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <ImagePlus className="size-3.5" />}
+                  {images.length ? 'Agregar imágenes' : 'Subir imágenes'}
+                </button>
+              )}
               <span className="text-xs text-muted-foreground">
                 {images.length}/{MAX_IMAGES} fotos
                 {images.length < MIN_RECOMMENDED_IMAGES ? ' · se recomiendan al menos 5' : ''}
@@ -341,3 +350,5 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.PRODUCTS_READ], ProductDetailPageContent)

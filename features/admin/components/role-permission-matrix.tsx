@@ -6,6 +6,7 @@ import { PERM, can } from '@/features/auth/utils/permissions'
 import type { CurrentUser } from '@/features/auth/types'
 import { rolesAdminService } from '../services/roles-admin.service'
 import { userAccessService, type CatalogPermission } from '../services/user-access.service'
+import { permissionGroup } from '../utils/permission-groups'
 
 interface RolePermissionMatrixProps {
   roleId: string
@@ -50,7 +51,8 @@ export function RolePermissionMatrix({ roleId, me }: RolePermissionMatrixProps) 
     )
     const map = new Map<string, CatalogPermission[]>()
     for (const p of filtered) {
-      map.set(p.module, [...(map.get(p.module) ?? []), p])
+      const key = permissionGroup(p)
+      map.set(key, [...(map.get(key) ?? []), p])
     }
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))
   }, [catalog, q])

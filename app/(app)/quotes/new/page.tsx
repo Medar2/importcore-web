@@ -17,6 +17,8 @@ import QuoteItemCard, {
   itemCbm,
   type ItemForm,
 } from '@/features/quotes/components/quote-item-card'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { IMPORTCORE_PERMS } from '@/features/auth/utils/permissions'
 
 const inputCls =
   'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring'
@@ -39,7 +41,7 @@ function toItem(f: ItemForm): QuoteItemInput {
   }
 }
 
-export default function NewQuotePage() {
+function NewQuotePageContent() {
   const router = useRouter()
   const [items, setItems] = useState<ItemForm[]>([{ ...EMPTY_ITEM }])
   const [products, setProducts] = useState<Product[]>([])
@@ -253,3 +255,5 @@ export default function NewQuotePage() {
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.QUOTES_CREATE], NewQuotePageContent)

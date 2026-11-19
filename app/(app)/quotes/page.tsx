@@ -7,11 +7,16 @@ import { quotesService } from '@/features/quotes/services/quotes.service'
 import { QuoteListItem } from '@/features/quotes/components/quote-list-item'
 import type { Quote } from '@/features/quotes/types'
 import { QUOTE_STATUS_LABEL, type QuoteStatus } from '@/features/quotes/utils/quote-status'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
 const PAGE_SIZE = 10
 const STATUSES = Object.keys(QUOTE_STATUS_LABEL) as QuoteStatus[]
 
-export default function QuotesPage() {
+function QuotesPageContent() {
+  const { user } = useCurrentUser()
+  const canCreate = can(user, IMPORTCORE_PERMS.QUOTES_CREATE)
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -56,12 +61,14 @@ export default function QuotesPage() {
     <main className="min-h-dvh bg-background pb-10">
       <header className="sticky top-14 z-10 flex items-center justify-between border-b border-border bg-card px-4 py-3">
         <h1 className="font-bold">Cotizaciones</h1>
-        <Link
-          href="/quotes/new"
-          className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground"
-        >
-          <Plus className="size-4" /> Nueva
-        </Link>
+        {canCreate && (
+          <Link
+            href="/quotes/new"
+            className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground"
+          >
+            <Plus className="size-4" /> Nueva
+          </Link>
+        )}
       </header>
 
       <div className="mx-auto max-w-3xl space-y-3 p-4">
@@ -147,3 +154,5 @@ export default function QuotesPage() {
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.QUOTES_READ], QuotesPageContent)

@@ -13,6 +13,8 @@ export interface CatalogPermission {
   code: string
   name: string
   module: string
+  resource?: string
+  action?: string
 }
 
 export interface CatalogRole {

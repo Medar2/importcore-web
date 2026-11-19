@@ -9,7 +9,7 @@ import { ordersService } from '@/features/orders/services/orders.service'
 import { customersService } from '@/features/customers/services/customers.service'
 import type { Customer } from '@/features/customers/types'
 import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
-import { can } from '@/features/auth/utils/permissions'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
 const btn =
   'rounded-lg border border-border px-2.5 py-1 text-xs font-medium transition hover:bg-secondary disabled:opacity-50'
@@ -30,8 +30,9 @@ export function QuoteWorkflowActions({ quote, onChange, onError }: QuoteWorkflow
   const [customers, setCustomers] = useState<Customer[] | null>(null)
   const [customerId, setCustomerId] = useState(quote.customerId ?? '')
 
-  const canUpdate = can(user, 'IMPORTCORE.QUOTES.UPDATE')
-  const canConvert = can(user, 'IMPORTCORE.ORDERS.WRITE')
+  const canUpdate = can(user, IMPORTCORE_PERMS.QUOTES_UPDATE)
+  const canConvert = can(user, IMPORTCORE_PERMS.ORDERS_WRITE)
+  const canPdf = can(user, IMPORTCORE_PERMS.QUOTES_PDF)
 
   async function setStatus(status: Quote['status']) {
     setBusy(status)
@@ -110,13 +111,15 @@ export function QuoteWorkflowActions({ quote, onChange, onError }: QuoteWorkflow
             Crear pedido
           </button>
         )}
-        <button
-          type="button"
-          onClick={() => quotesService.pdf(quote.id, quote.quoteNumber).catch((e) => onError(e.message))}
-          className="flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary"
-        >
-          <FileText className="size-3.5" /> PDF
-        </button>
+        {canPdf && (
+          <button
+            type="button"
+            onClick={() => quotesService.pdf(quote.id, quote.quoteNumber).catch((e) => onError(e.message))}
+            className="flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary"
+          >
+            <FileText className="size-3.5" /> PDF
+          </button>
+        )}
       </div>
 
       {pickCustomer && (

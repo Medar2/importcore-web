@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, Loader2 } from 'lucide-react'
 import { userAccessService, type CatalogPermission } from '../services/user-access.service'
+import { permissionGroup } from '../utils/permission-groups'
 
 export function PermissionsCatalog() {
   const [perms, setPerms] = useState<CatalogPermission[] | null>(null)
@@ -22,7 +23,8 @@ export function PermissionsCatalog() {
     )
     const map = new Map<string, CatalogPermission[]>()
     for (const p of filtered) {
-      map.set(p.module, [...(map.get(p.module) ?? []), p])
+      const key = permissionGroup(p)
+      map.set(key, [...(map.get(key) ?? []), p])
     }
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))
   }, [perms, q])

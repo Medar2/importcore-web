@@ -10,8 +10,13 @@ import {
   PURCHASE_STATUS_STYLE,
   purchaseStatusLabel,
 } from '@/features/purchases/utils/purchase-status'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
-export default function PurchasesPage() {
+function PurchasesPageContent() {
+  const { user } = useCurrentUser()
+  const canWrite = can(user, IMPORTCORE_PERMS.PURCHASES_WRITE)
   const [purchases, setPurchases] = useState<PurchaseOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -30,16 +35,18 @@ export default function PurchasesPage() {
     <main className="min-h-dvh bg-background pb-10">
       <header className="sticky top-14 z-10 flex items-center justify-between border-b border-border bg-card px-4 py-3">
         <h1 className="font-bold">Compras</h1>
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground"
-        >
-          <Plus className="size-4" /> Nueva OC
-        </button>
+        {canWrite && (
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground"
+          >
+            <Plus className="size-4" /> Nueva OC
+          </button>
+        )}
       </header>
 
       <div className="mx-auto max-w-3xl space-y-3 p-4">
-        {showForm && (
+        {showForm && canWrite && (
           <NewPurchaseForm
             onCreated={() => {
               setShowForm(false)
@@ -100,3 +107,5 @@ export default function PurchasesPage() {
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.PURCHASES_READ], PurchasesPageContent)

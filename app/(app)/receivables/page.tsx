@@ -6,8 +6,13 @@ import { BellRing, Loader2 } from 'lucide-react'
 import { receivablesService } from '@/features/receivables/services/receivables.service'
 import type { AgingBucket, AgingReport } from '@/features/receivables/types'
 import { AgingSummary, BUCKET_META, usd } from '@/features/receivables/components/aging-summary'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
-export default function ReceivablesPage() {
+function ReceivablesPageContent() {
+  const { user } = useCurrentUser()
+  const canRemind = can(user, IMPORTCORE_PERMS.ORDERS_WRITE)
   const [report, setReport] = useState<AgingReport | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -46,14 +51,16 @@ export default function ReceivablesPage() {
     <main className="min-h-dvh bg-background pb-10">
       <header className="sticky top-14 z-10 flex items-center justify-between gap-2 border-b border-border bg-card px-4 py-3">
         <h1 className="font-bold">Cuentas por cobrar</h1>
-        <button
-          onClick={runReminders}
-          disabled={running}
-          className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-        >
-          {running ? <Loader2 className="size-4 animate-spin" /> : <BellRing className="size-4" />}
-          <span className="hidden sm:inline">Enviar recordatorios</span>
-        </button>
+        {canRemind && (
+          <button
+            onClick={runReminders}
+            disabled={running}
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {running ? <Loader2 className="size-4 animate-spin" /> : <BellRing className="size-4" />}
+            <span className="hidden sm:inline">Enviar recordatorios</span>
+          </button>
+        )}
       </header>
 
       <div className="mx-auto max-w-3xl space-y-3 p-4">
@@ -93,3 +100,5 @@ export default function ReceivablesPage() {
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.ORDERS_READ], ReceivablesPageContent)

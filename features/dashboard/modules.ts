@@ -8,6 +8,7 @@ import {
   Users,
   Wallet,
 } from 'lucide-react'
+import { IMPORTCORE_PERMS } from '@/features/auth/utils/permissions'
 
 export interface ModuleDef {
   label: string
@@ -15,6 +16,7 @@ export interface ModuleDef {
   icon: ElementType
   href: string
   endpoint: string
+  permission?: string
 }
 
 export interface ModuleStat {
@@ -29,6 +31,7 @@ export const MODULES: ModuleDef[] = [
     icon: FileText,
     href: '/quotes',
     endpoint: '/quotes',
+    permission: IMPORTCORE_PERMS.QUOTES_READ,
   },
   {
     label: 'Pedidos',
@@ -36,6 +39,7 @@ export const MODULES: ModuleDef[] = [
     icon: ClipboardList,
     href: '/orders',
     endpoint: '/orders',
+    permission: IMPORTCORE_PERMS.ORDERS_READ,
   },
   {
     label: 'Clientes',
@@ -43,6 +47,7 @@ export const MODULES: ModuleDef[] = [
     icon: Users,
     href: '/customers',
     endpoint: '/customers',
+    permission: IMPORTCORE_PERMS.CUSTOMERS_READ,
   },
   {
     label: 'Productos',
@@ -50,6 +55,7 @@ export const MODULES: ModuleDef[] = [
     icon: Package,
     href: '/products',
     endpoint: '/products',
+    permission: IMPORTCORE_PERMS.PRODUCTS_READ,
   },
   {
     label: 'Proveedores',
@@ -57,6 +63,7 @@ export const MODULES: ModuleDef[] = [
     icon: Container,
     href: '/vendors',
     endpoint: '/vendors',
+    permission: IMPORTCORE_PERMS.VENDORS_READ,
   },
   {
     label: 'Contenedores',
@@ -64,6 +71,7 @@ export const MODULES: ModuleDef[] = [
     icon: Ship,
     href: '/containers',
     endpoint: '/shipping/containers',
+    permission: IMPORTCORE_PERMS.CONTAINERS_READ,
   },
   {
     label: 'Tasas de cambio',
@@ -71,5 +79,6 @@ export const MODULES: ModuleDef[] = [
     icon: Wallet,
     href: '/exchange-rates',
     endpoint: '/exchange-rates',
+    permission: IMPORTCORE_PERMS.EXCHANGE_RATES_READ,
   },
 ]

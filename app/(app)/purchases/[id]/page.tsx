@@ -11,9 +11,15 @@ import {
   nextPurchaseStatuses,
   purchaseStatusLabel,
 } from '@/features/purchases/utils/purchase-status'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { IMPORTCORE_PERMS, can } from '@/features/auth/utils/permissions'
 
-export default function PurchaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function PurchaseDetailPageContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const { user } = useCurrentUser()
+  const canWrite = can(user, IMPORTCORE_PERMS.PURCHASES_WRITE)
+  const canPay = can(user, IMPORTCORE_PERMS.PURCHASES_REGISTER_PAYMENT)
   const [po, setPo] = useState<PurchaseOrder | null>(null)
   const [balance, setBalance] = useState<PurchaseBalance | null>(null)
   const [loading, setLoading] = useState(true)
@@ -102,7 +108,7 @@ export default function PurchaseDetailPage({ params }: { params: Promise<{ id: s
           </section>
         )}
 
-        {nextPurchaseStatuses(po.status).length > 0 && (
+        {canWrite && nextPurchaseStatuses(po.status).length > 0 && (
           <div className="flex flex-col gap-2 sm:flex-row">
             {nextPurchaseStatuses(po.status).map((to) => (
               <button
@@ -120,7 +126,7 @@ export default function PurchaseDetailPage({ params }: { params: Promise<{ id: s
           </div>
         )}
 
-        {!isPurchaseClosed(po.status) && (
+        {canPay && !isPurchaseClosed(po.status) && (
           <PurchasePaymentForm purchaseId={id} onPaid={load} onError={setError} />
         )}
 
@@ -131,3 +137,5 @@ export default function PurchaseDetailPage({ params }: { params: Promise<{ id: s
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.PURCHASES_READ], PurchaseDetailPageContent)

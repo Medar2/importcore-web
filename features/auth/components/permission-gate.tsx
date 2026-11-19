@@ -34,3 +34,21 @@ export function PermissionGate({ anyOf, children }: PermissionGateProps) {
   }
   return <>{children(user)}</>
 }
+
+/** Envuelve una página completa: si no hay permiso, el contenido ni siquiera se monta. */
+export function withPermission<P extends object>(
+  anyOf: string[],
+  Component: React.ComponentType<P>,
+) {
+  function PermissionWrapped(props: P) {
+    return (
+      <PermissionGate anyOf={anyOf}>
+        {() => <Component {...props} />}
+      </PermissionGate>
+    )
+  }
+  PermissionWrapped.displayName = `withPermission(${
+    Component.displayName ?? Component.name ?? 'Component'
+  })`
+  return PermissionWrapped
+}

@@ -5,12 +5,14 @@ import Link from 'next/link'
 import { ArrowLeft, Building2, Loader2, Mail, MapPin, Phone, UserRound } from 'lucide-react'
 import { vendorsService } from '@/features/vendors/services/vendors.service'
 import type { Vendor } from '@/features/vendors/types'
+import { withPermission } from '@/features/auth/components/permission-gate'
+import { IMPORTCORE_PERMS } from '@/features/auth/utils/permissions'
 
 function formatDate(value?: string | null) {
   return value ? value.slice(0, 10) : '—'
 }
 
-export default function VendorDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function VendorDetailPageContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [vendor, setVendor] = useState<Vendor | null>(null)
   const [loading, setLoading] = useState(true)
@@ -130,3 +132,5 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
     </main>
   )
 }
+
+export default withPermission([IMPORTCORE_PERMS.VENDORS_READ], VendorDetailPageContent)

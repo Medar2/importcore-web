@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet, getToken } from '@/lib/api'
 import { MODULES, type ModuleStat } from '@/features/dashboard/modules'
+import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
+import { can } from '@/features/auth/utils/permissions'
 import { DashboardHeader } from '@/features/dashboard/components/dashboard-header'
 import { DashboardSummary } from '@/features/dashboard/components/dashboard-summary'
 import { ModuleGrid } from '@/features/dashboard/components/module-grid'
@@ -29,6 +31,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  const { user, loading: userLoading } = useCurrentUser()
+  const visibleModules = useMemo(
+    () => MODULES.filter((m) => !m.permission || can(user, m.permission)),
+    [user],
+  )
 
   const load = useCallback(async () => {
     if (!getToken()) {
@@ -36,13 +43,14 @@ export default function DashboardPage() {
       setLoading(false)
       return
     }
+    if (userLoading) return
 
     setLoading(true)
     setError(null)
 
     try {
       const results = await Promise.allSettled(
-        MODULES.map(async (m) => {
+        visibleModules.map(async (m) => {
           const data = await apiGet<unknown>(m.endpoint)
           return [m.href, recordCount(data)] as const
         }),
@@ -51,7 +59,7 @@ export default function DashboardPage() {
       const next: Record<string, ModuleStat> = {}
       let failed = 0
 
-      MODULES.forEach((m, i) => {
+      visibleModules.forEach((m, i) => {
         const result = results[i]
         if (result.status === 'fulfilled') {
           next[m.href] = { count: result.value[1], ok: true }
@@ -65,7 +73,7 @@ export default function DashboardPage() {
       setError(
         failed === 0
           ? null
-          : failed === MODULES.length
+          : failed === visibleModules.length
             ? 'API no disponible — verifica que importcore-api esté corriendo'
             : `${failed} módulo(s) no respondieron; mostrando datos parciales.`,
       )
@@ -73,7 +81,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }, [router])
+  }, [router, userLoading, visibleModules])
 
   useEffect(() => {
     void load()
@@ -117,7 +125,7 @@ export default function DashboardPage() {
         loading={loading}
         totalRecords={totalRecords}
         modulesWithData={modulesWithData}
-        modulesTotal={MODULES.length}
+        modulesTotal={visibleModules.length}
         failedCount={failedCount}
         updatedLabel={updatedLabel}
       />
@@ -129,7 +137,7 @@ export default function DashboardPage() {
           </p>
         )}
 
-        <ModuleGrid stats={stats} loading={loading} />
+        <ModuleGrid stats={stats} loading={loading} modules={visibleModules} />
         <AdminShortcuts />
         <ProjectProgress />
       </main>
