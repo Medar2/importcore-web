@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Loader2, Plus } from 'lucide-react'
+import Link from 'next/link'
+import { Loader2, Package, Plus } from 'lucide-react'
 import { apiGet, apiPost } from '@/lib/api'
 
 interface Product {
@@ -14,7 +15,8 @@ interface Product {
   boxHeightM: string
   boxGrossWeightKg: string | null
   unitFobPriceUsd: string | null
-  vendor?: { name: string } | null
+  imageUrls?: string[]
+  vendor?: { id?: string; name: string } | null
   tariffHeading?: { hsCode: string; description: string } | null
 }
 
@@ -104,10 +106,24 @@ export default function ProductsPage() {
 
         {!loading && products.map((p) => (
           <article key={p.id} className="rounded-xl border border-border bg-card p-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="font-semibold">{p.sku}</p>
-                <p className="text-xs text-muted-foreground">{p.description}</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
+                  {p.imageUrls?.[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.imageUrls[0]} alt={p.description} className="size-full object-cover" />
+                  ) : (
+                    <Package className="size-5 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <Link href={`/products/${p.id}`} className="font-semibold text-primary hover:underline">
+                    {p.sku}
+                  </Link>
+                  <Link href={`/products/${p.id}`} className="block truncate text-xs text-muted-foreground hover:text-foreground">
+                    {p.description}
+                  </Link>
+                </div>
               </div>
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
                 {cbm(p)} CBM/caja
@@ -116,7 +132,18 @@ export default function ProductsPage() {
             <p className="mt-1 text-xs text-muted-foreground">
               {p.unitsPerBox} unid/caja
               {p.unitFobPriceUsd ? ` · FOB $${Number(p.unitFobPriceUsd).toFixed(2)}` : ''}
-              {p.vendor ? ` · ${p.vendor.name}` : ''}
+              {p.vendor ? (
+                <>
+                  {' · '}
+                  {p.vendor.id ? (
+                    <Link href={`/vendors/${p.vendor.id}`} className="text-primary hover:underline">
+                      {p.vendor.name}
+                    </Link>
+                  ) : (
+                    p.vendor.name
+                  )}
+                </>
+              ) : null}
               {p.tariffHeading ? ` · HS ${p.tariffHeading.hsCode}` : ''}
             </p>
           </article>

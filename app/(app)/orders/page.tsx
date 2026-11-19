@@ -50,16 +50,24 @@ export default function OrdersPage() {
         )}
 
         {orders.map((o) => (
-          <Link
+          <article
             key={o.id}
-            href={`/orders/${o.id}`}
-            className="block rounded-xl border border-border bg-card p-4 transition hover:border-primary/40"
+            className="rounded-xl border border-border bg-card p-4 transition hover:border-primary/40"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-semibold">{o.orderNumber}</p>
+                <Link href={`/orders/${o.id}`} className="font-semibold text-primary hover:underline">
+                  {o.orderNumber}
+                </Link>
                 <p className="text-xs text-muted-foreground">
-                  {o.customer?.name ?? 'Sin cliente'} · {o.createdAt.slice(0, 10)}
+                  {o.customer?.id ? (
+                    <Link href={`/customers/${o.customer.id}`} className="text-primary hover:underline">
+                      {o.customer.name}
+                    </Link>
+                  ) : (
+                    o.customer?.name ?? 'Sin cliente'
+                  )}{' '}
+                  · {o.createdAt.slice(0, 10)}
                 </p>
               </div>
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_STYLE[o.status] ?? ''}`}>
@@ -70,7 +78,7 @@ export default function OrdersPage() {
               <span className="text-muted-foreground">Total: </span>
               <b>${Number(o.totalUsd).toFixed(2)}</b>
             </p>
-          </Link>
+          </article>
         ))}
       </div>
     </main>

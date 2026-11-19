@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Loader2, Plus } from 'lucide-react'
 import { apiGet, apiPost } from '@/lib/api'
 
@@ -90,7 +91,9 @@ export default function CustomersPage() {
           <article key={c.id} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="font-semibold">{c.name}</p>
+                <Link href={`/customers/${c.id}`} className="font-semibold text-primary hover:underline">
+                  {c.name}
+                </Link>
                 <p className="text-xs text-muted-foreground">{c.taxId} · {c.customerType}</p>
               </div>
               <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success">Activo</span>

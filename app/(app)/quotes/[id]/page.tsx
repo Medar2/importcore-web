@@ -168,6 +168,8 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
     quote.validUntil < new Date().toISOString().slice(0, 10) &&
     quote.status !== 'CONVERTED' &&
     quote.status !== 'REJECTED'
+  const customerName = quote.customer?.name ?? quote.customerName ?? 'Sin cliente'
+  const customerHref = quote.customer?.id ? `/customers/${quote.customer.id}` : null
   const occupancy = container?.occupancyCbmPercent
   const barWidth = occupancy == null ? 0 : Math.min(100, Math.max(0, occupancy))
 
@@ -181,7 +183,14 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
           <div>
             <h1 className="font-bold">{quote.quoteNumber}</h1>
             <p className="text-xs text-muted-foreground">
-              {quote.customer?.name ?? quote.customerName ?? 'Sin cliente'} · {quote.createdAt.slice(0, 10)}
+              {customerHref ? (
+                <Link href={customerHref} className="text-primary hover:underline">
+                  {customerName}
+                </Link>
+              ) : (
+                customerName
+              )}{' '}
+              · {quote.createdAt.slice(0, 10)}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -205,7 +214,15 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
           <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
             <div>
               <dt className="text-xs text-muted-foreground">Cliente</dt>
-              <dd className="font-medium">{quote.customer?.name ?? quote.customerName ?? 'Sin cliente'}</dd>
+              <dd className="font-medium">
+                {customerHref ? (
+                  <Link href={customerHref} className="text-primary hover:underline">
+                    {customerName}
+                  </Link>
+                ) : (
+                  customerName
+                )}
+              </dd>
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">RNC / cédula</dt>

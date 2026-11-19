@@ -63,16 +63,24 @@ export default function PurchasesPage() {
         )}
 
         {purchases.map((p) => (
-          <Link
+          <article
             key={p.id}
-            href={`/purchases/${p.id}`}
-            className="block rounded-xl border border-border bg-card p-4 transition hover:border-primary/40"
+            className="rounded-xl border border-border bg-card p-4 transition hover:border-primary/40"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-semibold">{p.poNumber}</p>
+                <Link href={`/purchases/${p.id}`} className="font-semibold text-primary hover:underline">
+                  {p.poNumber}
+                </Link>
                 <p className="truncate text-xs text-muted-foreground">
-                  {p.vendor?.name ?? 'Sin proveedor'} · {p.createdAt.slice(0, 10)}
+                  {p.vendor?.id ? (
+                    <Link href={`/vendors/${p.vendor.id}`} className="text-primary hover:underline">
+                      {p.vendor.name}
+                    </Link>
+                  ) : (
+                    p.vendor?.name ?? 'Sin proveedor'
+                  )}{' '}
+                  · {p.createdAt.slice(0, 10)}
                 </p>
               </div>
               <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${PURCHASE_STATUS_STYLE[p.status] ?? ''}`}>
@@ -86,7 +94,7 @@ export default function PurchasesPage() {
                 <span className="text-muted-foreground"> · Esperada {p.expectedDate}</span>
               )}
             </p>
-          </Link>
+          </article>
         ))}
       </div>
     </main>

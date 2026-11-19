@@ -63,7 +63,14 @@ export default function PurchaseDetailPage({ params }: { params: Promise<{ id: s
       <header className="sticky top-14 z-10 border-b border-border bg-card px-4 py-3">
         <h1 className="font-bold">{po.poNumber}</h1>
         <p className="text-xs text-muted-foreground">
-          {po.vendor?.name} · {purchaseStatusLabel(po.status)}
+          {po.vendor?.id ? (
+            <Link href={`/vendors/${po.vendor.id}`} className="text-primary hover:underline">
+              {po.vendor.name}
+            </Link>
+          ) : (
+            po.vendor?.name
+          )}{' '}
+          · {purchaseStatusLabel(po.status)}
           {po.order && (
             <>
               {' · Pedido '}

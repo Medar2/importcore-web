@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
+import Link from 'next/link'
 import { AlertCircle, CheckCircle2, Loader2, Lock, Navigation, Send, Ship } from 'lucide-react'
 import { ordersService } from '@/features/orders/services/orders.service'
 import type { Order, OrderBalance, OrderTrackingResult } from '@/features/orders/services/orders.service'
@@ -111,7 +112,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     <main className="min-h-dvh bg-background pb-10">
       <header className="sticky top-14 z-10 border-b border-border bg-card px-4 py-3">
         <h1 className="font-bold">{order.orderNumber}</h1>
-        <p className="text-xs text-muted-foreground">{order.customer?.name} · {statusLabel(order.status)}</p>
+        <p className="text-xs text-muted-foreground">
+          {order.customer?.id ? (
+            <Link href={`/customers/${order.customer.id}`} className="text-primary hover:underline">
+              {order.customer.name}
+            </Link>
+          ) : (
+            order.customer?.name
+          )}{' '}
+          · {statusLabel(order.status)}
+        </p>
       </header>
 
       <div className="mx-auto max-w-3xl space-y-4 p-4">

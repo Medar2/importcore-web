@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Loader2, Plus } from 'lucide-react'
 import { apiGet, apiPost } from '@/lib/api'
 
@@ -85,7 +86,9 @@ export default function VendorsPage() {
 
         {!loading && vendors.map((v) => (
           <article key={v.id} className="rounded-xl border border-border bg-card p-4">
-            <p className="font-semibold">{v.name}</p>
+            <Link href={`/vendors/${v.id}`} className="font-semibold text-primary hover:underline">
+              {v.name}
+            </Link>
             <p className="text-xs text-muted-foreground">
               {v.tradeName ? `${v.tradeName} · ` : ''}{v.countryCode}
               {v.contact ? ` · ${v.contact}` : ''}

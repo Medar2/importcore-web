@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Trash2 } from 'lucide-react'
 import type { Product } from '@/features/products/types'
 
@@ -93,7 +94,11 @@ export default function QuoteItemCard({
       <div className="mb-3 flex items-center justify-between">
         <span className="text-xs font-bold text-muted-foreground">
           Ítem {index + 1}
-          {selected && <span className="ml-1 text-primary">· {selected.sku}</span>}
+          {selected && (
+            <Link href={`/products/${selected.id}`} className="ml-1 text-primary hover:underline">
+              · {selected.sku}
+            </Link>
+          )}
         </span>
         <div className="flex items-center gap-3">
           <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">

@@ -182,6 +182,21 @@ export const apiPatch = <T>(path: string, body?: unknown) =>
   apiSend<T>('PATCH', path, body);
 export const apiDelete = (path: string) => apiSend<void>('DELETE', path);
 
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  const res = await authorizedFetch(path, {
+    method: 'POST',
+    body: formData,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = Array.isArray((data as { message?: string[] }).message)
+      ? (data as { message: string[] }).message.join(', ')
+      : (data as { message?: string }).message ?? `Error ${res.status}`;
+    throw new Error(msg);
+  }
+  return data as T;
+}
+
 export function pdfUrl(path: string): string {
   return `${BASE_URL}${path}`;
 }
