@@ -13,7 +13,16 @@ import {
   Wallet,
 } from 'lucide-react'
 import { ADMIN_PERMS, IMPORTCORE_PERMS } from '@/features/auth/utils/permissions'
-import type { NavSection } from './types'
+import { ADMIN_SECTIONS } from '@/features/admin/admin-sections'
+import type { NavItem, NavSection } from './types'
+
+const ADMIN_CHILDREN: NavItem[] = ADMIN_SECTIONS.map((section) => ({
+  id: `admin-${section.href}`,
+  href: section.href,
+  label: section.label,
+  icon: section.icon,
+  permission: section.permission,
+}))
 
 /** Catálogo central del menú. La visibilidad se filtra por permisos efectivos del usuario. */
 export const NAV_SECTIONS: NavSection[] = [
@@ -32,6 +41,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'Cotizaciones',
         icon: FileText,
         permission: IMPORTCORE_PERMS.QUOTES_READ,
+        badgeKey: 'quotes-draft',
       },
       {
         id: 'orders',
@@ -53,6 +63,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'CxC',
         icon: HandCoins,
         permission: IMPORTCORE_PERMS.ORDERS_READ,
+        badgeKey: 'receivables-overdue',
       },
     ],
   },
@@ -93,6 +104,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'Contenedores',
         icon: Ship,
         permission: IMPORTCORE_PERMS.CONTAINERS_READ,
+        badgeKey: 'containers-active',
       },
       {
         id: 'exchange-rates',
@@ -120,6 +132,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'Administración',
         icon: Settings,
         anyOf: ADMIN_PERMS,
+        children: ADMIN_CHILDREN,
       },
     ],
   },

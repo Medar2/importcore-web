@@ -150,7 +150,7 @@ function ContainersPageContent() {
         {/* Optimizador CBM */}
         <section className="rounded-xl border border-border bg-card p-4">
           <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold"><Ship className="size-4 text-primary" /> Optimizar carga</h2>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-xs text-muted-foreground">
               CBM total
               <input className={inputCls} placeholder="ej. 45.5" value={optCbm} onChange={(e) => setOptCbm(e.target.value)} />
@@ -175,7 +175,7 @@ function ContainersPageContent() {
         {showForm && canWrite && (
           <form onSubmit={create} className="rounded-xl border border-border bg-card p-4">
             <h2 className="mb-3 text-sm font-semibold">Nuevo contenedor</h2>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label className="flex flex-col gap-1 text-xs text-muted-foreground">
                 Número de contenedor *
                 <input className={inputCls} placeholder="ej. MSKU-123456-7" value={form.containerNumber} onChange={(e) => setForm({ ...form, containerNumber: e.target.value })} required />

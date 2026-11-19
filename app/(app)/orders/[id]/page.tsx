@@ -246,7 +246,7 @@ function OrderDetailPageContent({ params }: { params: Promise<{ id: string }> })
         {canRegisterPayment && (
           <section className="rounded-xl border border-border bg-card p-4">
             <h2 className="mb-3 text-sm font-semibold">Registrar pago / anticipo</h2>
-            <form onSubmit={pay} className="grid grid-cols-2 gap-2">
+            <form onSubmit={pay} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <input className={inputCls} placeholder="Monto" value={amount} onChange={(e) => setAmount(e.target.value)} required />
               <select className={inputCls} value={currency} onChange={(e) => setCurrency(e.target.value)}>
                 <option value="USD">USD</option>

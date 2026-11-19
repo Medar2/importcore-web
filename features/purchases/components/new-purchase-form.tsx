@@ -59,7 +59,7 @@ export function NewPurchaseForm({ onCreated, onError }: Props) {
   return (
     <form onSubmit={submit} className="rounded-xl border border-border bg-card p-4">
       <h2 className="mb-3 text-sm font-semibold">Nueva orden de compra</h2>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <select className={`${inputCls} col-span-2`} value={form.vendorId} onChange={(e) => setForm({ ...form, vendorId: e.target.value })} required>
           <option value="">Proveedor *</option>
           {vendors.map((v) => (

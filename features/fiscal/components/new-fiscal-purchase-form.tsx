@@ -44,7 +44,7 @@ export function NewFiscalPurchaseForm({ catalogs, onCreated, onError }: Props) {
   return (
     <form onSubmit={submit} className="rounded-xl border border-border bg-card p-4">
       <h2 className="mb-3 text-sm font-semibold">Registrar comprobante de compra (DOP)</h2>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <input className={inputCls} placeholder="RNC/cédula proveedor *" value={f.supplierTaxId} onChange={set('supplierTaxId')} required />
         <input className={inputCls} placeholder="NCF (B01… / E31…) *" value={f.ncf} onChange={set('ncf')} required />
         <input className={`${inputCls} col-span-2`} placeholder="Nombre del proveedor *" value={f.supplierName} onChange={set('supplierName')} required />

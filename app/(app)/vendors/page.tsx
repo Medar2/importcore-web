@@ -74,7 +74,7 @@ function VendorsPageContent() {
         {showForm && canWrite && (
           <form onSubmit={create} className="rounded-xl border border-border bg-card p-4">
             <h2 className="mb-3 text-sm font-semibold">Nuevo proveedor</h2>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <input className={`${inputCls} col-span-2`} placeholder="Nombre / empresa *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
               <input className={inputCls} placeholder="Contacto" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
               <input className={inputCls} placeholder="País (CN)" value={form.countryCode} onChange={(e) => setForm({ ...form, countryCode: e.target.value })} />

@@ -78,7 +78,7 @@ function CustomersPageContent() {
         {showForm && canWrite && (
           <form onSubmit={create} className="rounded-xl border border-border bg-card p-4">
             <h2 className="mb-3 text-sm font-semibold">Nuevo cliente</h2>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <input className={`${inputCls} col-span-2`} placeholder="Nombre / Razón social *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
               <input className={`${inputCls} col-span-2`} placeholder="RNC o cédula *" value={form.taxId} onChange={(e) => setForm({ ...form, taxId: e.target.value })} required />
               <input className={inputCls} placeholder="Teléfono" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />

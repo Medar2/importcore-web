@@ -65,7 +65,7 @@ function ExchangeRatesPageContent() {
         {showForm && canManage && (
           <form onSubmit={create} className="rounded-xl border border-border bg-card p-4">
             <h2 className="mb-3 text-sm font-semibold">Registrar tasa</h2>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <select className={inputCls} value={form.baseCurrency} onChange={(e) => setForm({ ...form, baseCurrency: e.target.value })}>
                 {['USD', 'DOP', 'CNY'].map((c) => <option key={c} value={c}>{c}</option>)}
               </select>

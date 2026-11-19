@@ -47,7 +47,7 @@ export function SequencesTab({ catalogs, onError }: Props) {
         <form onSubmit={submit} className="rounded-xl border border-border bg-card p-4">
           <h2 className="mb-1 text-sm font-semibold">Registrar rango autorizado por la DGII</h2>
           <p className="mb-3 text-xs text-muted-foreground">Reemplaza el rango activo del mismo tipo.</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <select className={`${inputCls} col-span-2`} value={form.ecfType} onChange={(e) => setForm({ ...form, ecfType: e.target.value })}>
               {SALE_TYPES.map((t) => (
                 <option key={t} value={t}>{t} · {catalogs?.ecfTypes[t] ?? ''}</option>

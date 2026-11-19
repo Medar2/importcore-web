@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu } from 'lucide-react'
+import { Menu, Search } from 'lucide-react'
 import { getToken } from '@/lib/api'
 import { UserMenu } from '@/features/auth/components/user-menu'
 import { useCurrentUser } from '@/features/auth/hooks/use-current-user'
 import { AppSidebar } from './app-sidebar'
+import { CommandPalette } from './command-palette'
+import { MobileBottomNav } from './mobile-bottom-nav'
 import { isNavItemActive, visibleNavigation } from '../utils/visible-navigation'
+import { useNavBadges } from '../hooks/use-nav-badges'
+import { useNavFavorites } from '../hooks/use-nav-favorites'
 
 const COLLAPSED_KEY = 'importcore.sidebar.collapsed'
 
@@ -15,8 +19,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const { user } = useCurrentUser()
+  const badges = useNavBadges()
+  const { favorites, toggle: toggleFavorite } = useNavFavorites(user?.profile.id)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   useEffect(() => {
     if (!getToken()) router.replace('/login')
@@ -31,21 +38,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (!mobileOpen) return
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setMobileOpen(false)
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setSearchOpen((open) => !open)
+      }
+      if (event.key === 'Escape') {
+        setSearchOpen(false)
+        setMobileOpen(false)
+      }
     }
     document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  useEffect(() => {
+    if (!mobileOpen && !searchOpen) return
     document.body.style.overflow = 'hidden'
     return () => {
-      document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = ''
     }
-  }, [mobileOpen])
+  }, [mobileOpen, searchOpen])
 
   const sections = visibleNavigation(user)
   const activeItem = sections
-    .flatMap((section) => section.items)
+    .flatMap((section) => section.items.flatMap((i) => [i, ...(i.children ?? [])]))
     .find((item) => isNavItemActive(pathname, item.href))
 
   function toggleCollapsed() {
@@ -54,6 +71,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       localStorage.setItem(COLLAPSED_KEY, next ? '1' : '0')
       return next
     })
+  }
+
+  const sidebarProps = {
+    sections,
+    badges,
+    favoriteIds: favorites,
+    onToggleFavorite: toggleFavorite,
+    pathname,
   }
 
   return (
@@ -75,7 +100,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {activeItem?.label ?? 'ImportCore RD'}
           </span>
 
-          <div className="ml-auto">
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className="ml-auto flex h-9 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+            aria-label="Buscar (Ctrl+K)"
+          >
+            <Search className="size-4" />
+            <span className="hidden sm:inline">Buscar…</span>
+            <kbd className="hidden rounded border border-border px-1.5 py-0.5 text-[10px] sm:inline">Ctrl K</kbd>
+          </button>
+
+          <div>
             <UserMenu />
           </div>
         </div>
@@ -88,17 +124,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           }`}
         >
           <AppSidebar
-            sections={sections}
+            {...sidebarProps}
             collapsed={collapsed}
             variant="desktop"
             className="w-full"
             onToggle={toggleCollapsed}
-            pathname={pathname}
           />
         </aside>
 
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1 pb-20 lg:pb-0">{children}</main>
       </div>
+
+      <MobileBottomNav
+        sections={sections}
+        badges={badges}
+        onOpenMenu={() => setMobileOpen(true)}
+        pathname={pathname}
+      />
 
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -110,16 +152,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           />
           <div className="absolute inset-y-0 left-0 z-50 w-72 shadow-xl">
             <AppSidebar
-              sections={sections}
+              {...sidebarProps}
               variant="mobile"
               className="border-r border-border"
               onClose={() => setMobileOpen(false)}
               onNavigate={() => setMobileOpen(false)}
-              pathname={pathname}
             />
           </div>
         </div>
       )}
+
+      <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} sections={sections} />
     </div>
   )
 }

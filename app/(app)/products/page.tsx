@@ -91,7 +91,7 @@ function ProductsPageContent() {
         {showForm && canWrite && (
           <form onSubmit={create} className="rounded-xl border border-border bg-card p-4">
             <h2 className="mb-3 text-sm font-semibold">Nuevo producto</h2>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <input className={inputCls} placeholder="SKU *" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} required />
               <input className={inputCls} placeholder="Descripción *" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
               <input className={inputCls} type="number" min={1} placeholder="Unidades/caja" value={form.unitsPerBox} onChange={(e) => setForm({ ...form, unitsPerBox: e.target.value })} />

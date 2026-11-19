@@ -112,7 +112,7 @@ export default function QuoteItemCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <label className="col-span-2 flex flex-col gap-1 text-[10px] text-muted-foreground">
           Producto del catálogo
           <select

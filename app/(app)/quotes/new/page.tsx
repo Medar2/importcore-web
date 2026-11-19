@@ -133,7 +133,7 @@ function NewQuotePageContent() {
       <form onSubmit={submit} className="mx-auto max-w-3xl space-y-4 p-4">
         <section className="rounded-xl border border-border bg-card p-4">
           <h2 className="mb-3 text-sm font-semibold">Cliente y contenedor</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="col-span-2 flex flex-col gap-1 text-xs">
               Cliente
               <select className={inputCls} value={customerId} onChange={(e) => selectCustomer(e.target.value)}>

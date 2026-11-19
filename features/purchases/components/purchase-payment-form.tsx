@@ -48,7 +48,7 @@ export function PurchasePaymentForm({ purchaseId, onPaid, onError }: Props) {
   return (
     <section className="rounded-xl border border-border bg-card p-4">
       <h2 className="mb-3 text-sm font-semibold">Registrar pago al proveedor</h2>
-      <form onSubmit={submit} className="grid grid-cols-2 gap-2">
+      <form onSubmit={submit} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <input className={inputCls} placeholder="Monto" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} required />
         <select className={inputCls} value={currency} onChange={(e) => setCurrency(e.target.value)}>
           <option value="USD">USD</option>
