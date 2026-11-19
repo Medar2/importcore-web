@@ -255,11 +255,19 @@ function ContainersPageContent() {
 
               <ContainerBay containerType={c.containerType} occupancy={occ ?? null} />
 
-              {/* Información Logística de Fechas */}
+              {/* Peso y volumen disponible */}
               {occ && (
-                <p className="text-xs text-muted-foreground">
-                  Peso {occ.usedKg.toLocaleString('es-DO')} / {occ.capacityKg.toLocaleString('es-DO')} kg ({occ.occupancyKgPercent}%)
-                </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <p>
+                    CBM <b className="text-foreground">{Math.max(0, Math.round(100 - occ.occupancyCbmPercent))}% libre</b>
+                    {' '}({Number(occ.remainingCbm).toLocaleString('es-DO')} de {Number(occ.capacityCbm).toLocaleString('es-DO')})
+                  </p>
+                  <p>
+                    Peso <b className="text-foreground">{occ.usedKg.toLocaleString('es-DO')} / {occ.capacityKg.toLocaleString('es-DO')} kg</b>
+                    {' '}({Math.round(occ.occupancyKgPercent)}% ocupado
+                    {occ.remainingKg > 0 ? ` · ${Math.max(0, Math.round(100 - occ.occupancyKgPercent))}% libre` : ''})
+                  </p>
+                </div>
               )}
 
               <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">

@@ -73,6 +73,29 @@ export function ContainerBay({ containerType, occupancy }: ContainerBayProps) {
         </p>
       </div>
 
+      {!openEnded && (
+        <div className="px-4 pt-2">
+          <div className="flex items-center justify-between text-[11px] text-[#c5d4ea]">
+            <span>{Math.round(occupancy.occupancyCbmPercent)}% ocupado</span>
+            <span className={`font-bold ${overloaded ? 'text-[#ff8a94]' : 'text-[#86efac]'}`}>
+              {overloaded ? 'Sobrecargado' : `${Math.max(0, Math.round(100 - occupancy.occupancyCbmPercent))}% disponible`}
+            </span>
+          </div>
+          <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/15" role="progressbar" aria-valuenow={Math.round(occupancy.occupancyCbmPercent)} aria-valuemin={0} aria-valuemax={100}>
+            <div
+              className={`h-full rounded-full transition-all ${
+                overloaded || occupancy.occupancyCbmPercent >= 90
+                  ? 'bg-[#ce1126]'
+                  : occupancy.occupancyCbmPercent >= 70
+                    ? 'bg-[#f4c542]'
+                    : 'bg-[#4d8dff]'
+              }`}
+              style={{ width: `${Math.min(100, Math.max(0, occupancy.occupancyCbmPercent))}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       <svg viewBox="0 0 720 280" className="h-auto w-full" role="img" aria-label={`Contenedor ${typeLabel}. Libre ${qty(remaining)} CBM.`}>
         <defs>
           <pattern id={`${rawId}-corr`} width="16" height="16" patternUnits="userSpaceOnUse">

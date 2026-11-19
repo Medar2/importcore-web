@@ -28,10 +28,10 @@ export function NewPurchaseForm({ onCreated, onError }: Props) {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    Promise.all([apiGet<VendorOption[]>('/vendors'), ordersService.list()])
+    Promise.all([apiGet<VendorOption[]>('/vendors'), ordersService.list({ pageSize: 100 })])
       .then(([v, o]) => {
         setVendors(v)
-        setOrders(o.filter((x) => !['DISPATCHED', 'CANCELLED'].includes(x.status)))
+        setOrders(o.items.filter((x) => !['DISPATCHED', 'CANCELLED'].includes(x.status)))
       })
       .catch((e) => onError(e.message))
   }, [onError])

@@ -42,11 +42,32 @@ export interface OrderTrackingResult {
   } | null
 }
 
+export interface OrderPage {
+  items: Order[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export interface OrderListParams {
+  status?: string
+  search?: string
+  page?: number
+  pageSize?: number
+}
+
 export const ordersService = {
   create: (body: { quoteId: string; customerId?: string; containerId?: string; notes?: string }) =>
     apiPost<Order>('/orders', body),
-  list: (status?: string) =>
-    apiGet<Order[]>(`/orders${status ? `?status=${status}` : ''}`),
+  list: (params?: OrderListParams) => {
+    const query = new URLSearchParams()
+    if (params?.status) query.set('status', params.status)
+    if (params?.search?.trim()) query.set('search', params.search.trim())
+    if (params?.page) query.set('page', String(params.page))
+    if (params?.pageSize) query.set('pageSize', String(params.pageSize))
+    const qs = query.toString()
+    return apiGet<OrderPage>(`/orders${qs ? `?${qs}` : ''}`)
+  },
   balance: (id: string) => apiGet<OrderBalance>(`/orders/${id}/balance`),
   tracking: (id: string) => apiGet<OrderTrackingResult>(`/orders/${id}/tracking`),
   pay: (id: string, body: Record<string, unknown>) =>
